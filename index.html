@@ -110,12 +110,26 @@
     text-transform: uppercase;
   }
 
-  @media (orientation: landscape) {
+  @media (orientation: landscape) and (pointer: coarse) {
     #rotate-prompt {
       display: flex;
     }
     #game-wrap {
       display: none !important;
+    }
+  }
+  @media (min-width: 1025px) {
+    /* Beautiful phone frame mockup when viewed on desktop browsers */
+    #game-wrap {
+      width: 506px;
+      height: 900px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 6px solid #ffaa00;
+      border-radius: 20px;
+      box-sizing: border-box;
+      box-shadow: 0 0 50px rgba(255, 170, 0, 0.45);
     }
   }
 </style>
@@ -140,8 +154,25 @@ document.addEventListener('touchmove', function(e) {
 function resizeGame() {
   const gameWrap = document.getElementById('game-wrap');
   if (gameWrap) {
-    gameWrap.style.width = window.innerWidth + 'px';
-    gameWrap.style.height = window.innerHeight + 'px';
+    if (window.innerWidth <= 1024) {
+      gameWrap.style.width = window.innerWidth + 'px';
+      gameWrap.style.height = window.innerHeight + 'px';
+      gameWrap.style.left = '0';
+      gameWrap.style.top = '0';
+      gameWrap.style.transform = 'none';
+      gameWrap.style.border = 'none';
+      gameWrap.style.borderRadius = '0';
+      gameWrap.style.boxShadow = 'none';
+    } else {
+      gameWrap.style.width = '';
+      gameWrap.style.height = '';
+      gameWrap.style.left = '';
+      gameWrap.style.top = '';
+      gameWrap.style.transform = '';
+      gameWrap.style.border = '';
+      gameWrap.style.borderRadius = '';
+      gameWrap.style.boxShadow = '';
+    }
   }
 }
 window.addEventListener('resize', resizeGame);
