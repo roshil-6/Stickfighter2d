@@ -876,6 +876,21 @@ class FightScene extends Phaser.Scene {
     this.timerText=this.add.text(W/2, 45, '60', {fontFamily:'Bebas Neue', fontSize:'32px', color:'#ffffff'}).setOrigin(0.5).setDepth(16);
     this.roundLabel = this.add.text(W/2, H-25, `STAGE ${GameState.stage}`, {fontFamily:'Bebas Neue', fontSize:'16px', color:'#ff8400'}).setOrigin(0.5).setDepth(11);
 
+    // Fullscreen toggle button
+    const fsBtn = this.add.text(W/2 + 75, 45, '⛶', { fontFamily: 'Oswald', fontSize: '26px', color: '#ffaa00' })
+      .setOrigin(0.5)
+      .setDepth(20)
+      .setInteractive({ useHandCursor: true });
+    fsBtn.on('pointerover', () => fsBtn.setColor('#ffffff'));
+    fsBtn.on('pointerout', () => fsBtn.setColor('#ffaa00'));
+    fsBtn.on('pointerdown', () => {
+      if (this.scale.isFullscreen) {
+        this.scale.stopFullscreen();
+      } else {
+        this.scale.startFullscreen();
+      }
+    });
+
     this.resultText=this.add.text(W/2, H/2-60, '', {fontFamily:'Bebas Neue', fontSize:'60px', color:'#ffffff'}).setOrigin(0.5).setDepth(20).setStroke('#000', 8);
 
     this.statsText = this.add.text(W/2, 5, `LV.${GameState.level()} ${GameState.rank()}  |  COINS ${GameState.coins}  |  STREAK ${GameState.streak} (BEST ${GameState.bestStreak})`, {
@@ -888,32 +903,44 @@ class FightScene extends Phaser.Scene {
   buildMobileControls(){
     this.mobileG = this.add.graphics().setDepth(99);
     
-    const dpadX = 110, dpadY = H - 90;
+    // Position D-pad slightly further in and higher up to avoid bezel cuts
+    const dpadX = 135, dpadY = H - 120;
     this.mobileG.fillStyle(0x0c0715, 0.65);
     this.mobileG.lineStyle(4, 0xffbb00, 0.6); 
-    this.mobileG.fillCircle(dpadX, dpadY, 55);
-    this.mobileG.strokeCircle(dpadX, dpadY, 55);
+    this.mobileG.fillCircle(dpadX, dpadY, 62);
+    this.mobileG.strokeCircle(dpadX, dpadY, 62);
     
     const addDirBtn = (x, y, label, key) => {
-      const c = this.add.circle(x, y, 22, 0xffffff, 0.15).setInteractive().setDepth(100).setStrokeStyle(1.5, 0xffffff, 0.3);
-      this.add.text(x, y, label, {fontFamily:'Oswald', fontSize: '15px', color:'#ffffff', fontWeight:'bold'}).setOrigin(0.5).setDepth(101);
+      const c = this.add.circle(x, y, 26, 0xffffff, 0.15).setInteractive().setDepth(100).setStrokeStyle(1.5, 0xffffff, 0.3);
+      this.add.text(x, y, label, {fontFamily:'Oswald', fontSize: '18px', color:'#ffffff', fontWeight:'bold'}).setOrigin(0.5).setDepth(101);
+      
+      // Make touch hit area 1.6x larger than visual button (extremely responsive)
+      c.input.hitArea.radius = 42;
+
       c.on('pointerdown', () => { this.mobileKeys[key] = true; c.setFillStyle(0xffffff, 0.4); });
       c.on('pointerup', () => { this.mobileKeys[key] = false; c.setFillStyle(0xffffff, 0.15); });
       c.on('pointerout', () => { this.mobileKeys[key] = false; c.setFillStyle(0xffffff, 0.15); });
     };
 
-    addDirBtn(dpadX - 32, dpadY, '◀', 'left');
-    addDirBtn(dpadX + 32, dpadY, '▶', 'right');
-    addDirBtn(dpadX, dpadY - 32, '▲', 'up');
-    addDirBtn(dpadX, dpadY + 32, '▼', 'down');
+    addDirBtn(dpadX - 36, dpadY, '◀', 'left');
+    addDirBtn(dpadX + 36, dpadY, '▶', 'right');
+    addDirBtn(dpadX, dpadY - 36, '▲', 'up');
+    addDirBtn(dpadX, dpadY + 36, '▼', 'down');
 
-    const actX = W - 140, actY = H - 90;
+    // Shift action buttons further in and higher up to avoid rounded screen bezel cuts
+    const actX = W - 165, actY = H - 120;
     const ig = this.add.graphics().setDepth(102); 
 
     const addActionBtn = (x, y, radius, label, color, key, drawIconCallback) => {
+      // Semi-transparent button base with glowing rim
       const c = this.add.circle(x, y, radius, 0x0c0715, 0.75).setInteractive().setDepth(100).setStrokeStyle(3, color, 0.85);
+      
+      // Bottom text label placed safely below the circle
       this.add.text(x, y + radius + 11, label, {fontFamily:'Bebas Neue', fontSize: '13px', color:'#ffffff'}).setOrigin(0.5).setDepth(101).setStroke('#000000', 3);
       
+      // Make hit area 1.6x larger than the visual button
+      c.input.hitArea.radius = 48;
+
       drawIconCallback(ig, x, y);
 
       c.on('pointerdown', () => { 
@@ -922,58 +949,60 @@ class FightScene extends Phaser.Scene {
         c.setFillStyle(color, 0.35);
       });
       c.on('pointerup', () => { 
+        this.mobileKeys[key] = false; // Fixed sticky button issue
         c.setScale(1.0); 
         c.setFillStyle(0x0c0715, 0.75);
       });
       c.on('pointerout', () => { 
+        this.mobileKeys[key] = false; 
         c.setScale(1.0); 
         c.setFillStyle(0x0c0715, 0.75);
       });
     };
 
     // 1. Blue Block Shield
-    addActionBtn(actX - 25, actY - 20, 26, 'BLOCK', 0x0084ff, 'down', (g, x, y) => {
+    addActionBtn(actX - 38, actY - 26, 30, 'BLOCK', 0x0084ff, 'down', (g, x, y) => {
       g.fillStyle(0x3ac6ff, 0.95);
       g.lineStyle(1.5, 0xffffff, 1);
       g.beginPath();
-      g.moveTo(x - 8, y - 10);
-      g.lineTo(x + 8, y - 10);
-      g.lineTo(x + 8, y - 2);
-      g.lineTo(x, y + 10);
-      g.lineTo(x - 8, y - 2);
+      g.moveTo(x - 9, y - 11);
+      g.lineTo(x + 9, y - 11);
+      g.lineTo(x + 9, y - 2);
+      g.lineTo(x, y + 11);
+      g.lineTo(x - 9, y - 2);
       g.closePath();
       g.fillPath();
       g.strokePath();
     });
 
     // 2. Green Kick Shoe
-    addActionBtn(actX - 25, actY + 40, 26, 'KICK', 0x00cc44, 'kick', (g, x, y) => {
+    addActionBtn(actX - 38, actY + 38, 30, 'KICK', 0x00cc44, 'kick', (g, x, y) => {
       g.lineStyle(5, 0x4ff078, 1);
       g.lineCap = 'round';
       g.lineJoin = 'round';
       g.beginPath();
-      g.moveTo(x - 8, y - 10);
+      g.moveTo(x - 9, y - 11);
       g.lineTo(x + 2, y + 4); 
-      g.lineTo(x + 11, y - 2); 
+      g.lineTo(x + 12, y - 2); 
       g.strokePath();
     });
 
     // 3. Yellow Fist Punch
-    addActionBtn(actX + 45, actY - 20, 26, 'PUNCH', 0xffbb00, 'punch', (g, x, y) => {
+    addActionBtn(actX + 38, actY - 26, 30, 'PUNCH', 0xffbb00, 'punch', (g, x, y) => {
       g.fillStyle(0xffea00, 1);
-      g.fillRect(x - 9, y - 5, 15, 10); 
-      g.fillRect(x - 6, y - 9, 3, 4); 
-      g.fillRect(x - 2, y - 9, 3, 4);
-      g.fillRect(x + 2, y - 9, 3, 4);
-      g.fillRect(x - 11, y - 2, 3, 7); 
+      g.fillRect(x - 10, y - 6, 17, 11); 
+      g.fillRect(x - 7, y - 10, 3, 4); 
+      g.fillRect(x - 2, y - 10, 3, 4);
+      g.fillRect(x + 3, y - 10, 3, 4);
+      g.fillRect(x - 12, y - 3, 3, 8); 
     });
 
     // 4. Purple Flame Special
-    addActionBtn(actX + 45, actY + 40, 26, 'SPECIAL', 0xa326ef, 'special', (g, x, y) => {
+    addActionBtn(actX + 38, actY + 38, 30, 'SPECIAL', 0xa326ef, 'special', (g, x, y) => {
       g.fillStyle(0xe577ff, 0.95);
-      g.fillCircle(x, y + 4, 8);
-      g.fillCircle(x - 3, y - 1, 6);
-      g.fillCircle(x + 3, y - 6, 4);
+      g.fillCircle(x, y + 4, 9);
+      g.fillCircle(x - 3, y - 1, 7);
+      g.fillCircle(x + 3, y - 7, 5);
     });
     
     const hintStyle={fontFamily:'Oswald',fontSize:'11px',color:'#777777'};
@@ -1227,6 +1256,21 @@ class MenuScene extends Phaser.Scene {
     this.buildMainView();
     this.buildPlaySelectView();
     this.buildShopView();
+
+    // Fullscreen toggle button
+    const fsBtn = this.add.text(W - 35, 30, '⛶', { fontFamily: 'Oswald', fontSize: '26px', color: '#ffaa00' })
+      .setOrigin(0.5)
+      .setDepth(20)
+      .setInteractive({ useHandCursor: true });
+    fsBtn.on('pointerover', () => fsBtn.setColor('#ffffff'));
+    fsBtn.on('pointerout', () => fsBtn.setColor('#ffaa00'));
+    fsBtn.on('pointerdown', () => {
+      if (this.scale.isFullscreen) {
+        this.scale.stopFullscreen();
+      } else {
+        this.scale.startFullscreen();
+      }
+    });
   }
 
   update(time, delta) {
