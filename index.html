@@ -283,11 +283,9 @@ class Fighter {
 
   get rangeBox(){
     const baseRange = this.weapon.range;
-    if (this.state === 'punch' || this.state === 'special') {
-      return baseRange;
-    } else if (this.state === 'kick') {
-      return baseRange + 10; 
-    }
+    if (this.state === 'punch') return baseRange;
+    if (this.state === 'kick') return baseRange + 15; 
+    if (this.state === 'special') return baseRange + 65; // Massive spin range
     return 0;
   }
 
@@ -323,7 +321,11 @@ class Fighter {
     if(this.state==='jump' || this.vy!==0 || this.y<GROUND_Y){
       this.vy += 1500*dt;
       this.y += this.vy*dt;
-      if(this.y>=GROUND_Y){ this.y=GROUND_Y; this.vy=0; if(this.state==='jump') this.state='idle'; }
+      if(this.y>=GROUND_Y){ 
+        this.y=GROUND_Y; 
+        this.vy=0; 
+        if(this.state==='jump') this.state='idle'; 
+      }
     }
 
     if(this.stateTimer>0){
@@ -347,36 +349,42 @@ class Fighter {
 
     if(!this.isBusy()) this.facing = opponent.x > this.x ? 1 : -1;
 
-    if(!this.isBusy() && this.y>=GROUND_Y){
+    if(!this.isBusy()){
       let moving=false;
       const spd = 260*this.mods.speedMult;
       const accel = 2000 * this.mods.speedMult;
-      if(input.left()){ 
-        this.vx -= accel * dt; 
-        moving=true; 
-      }
-      else if(input.right()){ 
-        this.vx += accel * dt; 
-        moving=true; 
-      }
+      
+      // Allow movement in air too (air strafing)
+      if(input.left()){ this.vx -= accel * dt; moving=true; }
+      else if(input.right()){ this.vx += accel * dt; moving=true; }
       this.vx = Phaser.Math.Clamp(this.vx, -spd, spd);
 
-      if(input.jump()){ this.vy=-660; this.state='jump'; this.stateTimer=0; }
-      else if(input.block()){ this.state='block'; }
-      else if(input.punch()){ this.startAction('punch',240); }
-      else if(input.kick()){ this.startAction('kick',340); }
-      else if(input.special() && this.meter>=100){ this.meter=0; this.startAction('special',460); }
-      else { this.state = moving ? 'walk' : 'idle'; }
+      if (this.y >= GROUND_Y) {
+        if(input.jump()){ this.vy=-660; this.state='jump'; this.stateTimer=0; }
+        else if(input.block()){ this.state='block'; }
+        else if(input.punch()){ this.startAction('punch',240); }
+        else if(input.kick()){ this.startAction('kick',340); }
+        else if(input.special() && this.meter>=100){ this.meter=0; this.startAction('special',460); }
+        else { this.state = moving ? 'walk' : 'idle'; }
+      } else {
+        // Allow air attacks
+        if(input.kick()){ this.startAction('kick',340); }
+        else if(input.punch()){ this.startAction('punch',240); }
+      }
     }
 
     if(['punch','kick','special'].includes(this.state) && !this.hasHit){
       const durations = {punch:240,kick:340,special:460};
       const progress = 1 - Math.max(0,this.stateTimer)/durations[this.state];
-      const activeWindow = this.state==='punch' ? [0.3,0.6] : this.state==='kick' ? [0.35,0.65] : [0.25,0.6];
+      const activeWindow = this.state==='punch' ? [0.3,0.6] : this.state==='kick' ? [0.35,0.65] : [0.15,0.85];
       if(progress>=activeWindow[0] && progress<=activeWindow[1]){
         const dist = Math.abs(opponent.x-this.x);
         const facingRight = (opponent.x-this.x)*this.facing>0;
-        if(dist<=this.rangeBox && facingRight && opponent.hitCooldown<=0){
+        
+        // Spin special hits in both directions
+        const isFacingCorrectly = (this.state === 'special') ? true : facingRight;
+
+        if(dist<=this.rangeBox && isFacingCorrectly && opponent.hitCooldown<=0){
           this.hasHit = true;
           let dmg = {punch:8, kick:14, special:28}[this.state] * this.mods.dmgMult * this.weapon.dmg;
           let knock = this.facing*(this.state==='special'?280:160);
@@ -1021,15 +1029,18 @@ class FightScene extends Phaser.Scene {
     this.buttonsContainer.add(dpadBg);
 
     const makeDirBtn = (x, y, label, key) => {
-      const btn = this.add.circle(x, y, 28, 0xffffff, 0.15).setInteractive().setDepth(100).setStrokeStyle(1.5, 0xffffff, 0.3);
+      // Invisible oversized touch target for reliable pressing
+      const hitArea = this.add.circle(x, y, 48, 0xffffff, 0.001).setInteractive().setDepth(105);
+      
+      // Visual button
+      const vis = this.add.circle(x, y, 28, 0xffffff, 0.15).setDepth(100).setStrokeStyle(1.5, 0xffffff, 0.3);
       const txt = this.add.text(x, y, label, { fontFamily: 'Oswald', fontSize: '18px', color: '#ffffff', fontWeight: 'bold' }).setOrigin(0.5).setDepth(101);
-      btn.input.hitArea.radius = 45;
       
-      btn.on('pointerdown', () => { this.mobileKeys[key] = true; btn.setFillStyle(0xffffff, 0.4); });
-      btn.on('pointerup', () => { this.mobileKeys[key] = false; btn.setFillStyle(0xffffff, 0.15); });
-      btn.on('pointerout', () => { this.mobileKeys[key] = false; btn.setFillStyle(0xffffff, 0.15); });
+      hitArea.on('pointerdown', () => { this.mobileKeys[key] = true; vis.setFillStyle(0xffffff, 0.4); });
+      hitArea.on('pointerup', () => { this.mobileKeys[key] = false; vis.setFillStyle(0xffffff, 0.15); });
+      hitArea.on('pointerout', () => { this.mobileKeys[key] = false; vis.setFillStyle(0xffffff, 0.15); });
       
-      this.buttonsContainer.add([btn, txt]);
+      this.buttonsContainer.add([hitArea, vis, txt]);
     };
     makeDirBtn(dpadX - 38, dpadY, '◀', 'left');
     makeDirBtn(dpadX + 38, dpadY, '▶', 'right');
@@ -1041,29 +1052,32 @@ class FightScene extends Phaser.Scene {
     this.buttonsContainer.add(ig);
 
     const makeActionBtn = (x, y, radius, label, color, key, drawIconCallback) => {
-      const btn = this.add.circle(x, y, radius, 0x0c0715, 0.75).setInteractive().setDepth(100).setStrokeStyle(3, color, 0.85);
+      // Oversized hit area
+      const hitArea = this.add.circle(x, y, 55, 0xffffff, 0.001).setInteractive().setDepth(105);
+      
+      // Visual button
+      const vis = this.add.circle(x, y, radius, 0x0c0715, 0.75).setDepth(100).setStrokeStyle(3, color, 0.85);
       const labelTxt = this.add.text(x, y + radius + 11, label, { fontFamily: 'Bebas Neue', fontSize: '13px', color: '#ffffff' }).setOrigin(0.5).setDepth(101).setStroke('#000000', 3);
       
-      btn.input.hitArea.radius = 50;
       drawIconCallback(ig, x, y);
 
-      btn.on('pointerdown', () => { 
+      hitArea.on('pointerdown', () => { 
         this.mobileKeys[key] = true; 
-        btn.setScale(0.9); 
-        btn.setFillStyle(color, 0.35);
+        vis.setScale(0.9); 
+        vis.setFillStyle(color, 0.35);
       });
-      btn.on('pointerup', () => { 
+      hitArea.on('pointerup', () => { 
         this.mobileKeys[key] = false; 
-        btn.setScale(1.0); 
-        btn.setFillStyle(0x0c0715, 0.75);
+        vis.setScale(1.0); 
+        vis.setFillStyle(0x0c0715, 0.75);
       });
-      btn.on('pointerout', () => { 
+      hitArea.on('pointerout', () => { 
         this.mobileKeys[key] = false; 
-        btn.setScale(1.0); 
-        btn.setFillStyle(0x0c0715, 0.75);
+        vis.setScale(1.0); 
+        vis.setFillStyle(0x0c0715, 0.75);
       });
 
-      this.buttonsContainer.add([btn, labelTxt]);
+      this.buttonsContainer.add([hitArea, vis, labelTxt]);
     };
 
     // 1. Blue Block Shield
@@ -1600,7 +1614,8 @@ const config = {
   width: W, height: H,
   parent: 'game-wrap',
   backgroundColor: '#0c0715',
-  scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH, orientation: Phaser.Scale.LANDSCAPE },
+  scale: { mode:Phaser.Scale.ENVELOP, autoCenter:Phaser.Scale.CENTER_BOTH, orientation: Phaser.Scale.LANDSCAPE },
+  input: { activePointers: 5 },
   scene: [MenuScene, FightScene]
 };
 
