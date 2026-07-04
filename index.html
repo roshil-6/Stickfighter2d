@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Stickfighters — Premium Portrait Edition</title>
+<title>Stickfighters — Premium Landscape Edition</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Satisfy&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -38,7 +38,7 @@
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
   }
   
-  /* Rotate device prompt overlay (Portrait is standard, prompt on landscape) */
+  /* Rotate device prompt overlay (Landscape is standard, prompt on portrait touch devices) */
   #rotate-prompt {
     display: none;
     position: fixed;
@@ -57,8 +57,8 @@
     box-sizing: border-box;
   }
   .phone-icon {
-    width: 110px;
-    height: 60px;
+    width: 60px;
+    height: 110px;
     border: 5px solid #ffaa00;
     border-radius: 10px;
     position: relative;
@@ -69,9 +69,9 @@
   .phone-icon::after {
     content: '';
     position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 10px;
     height: 10px;
     border-radius: 50%;
@@ -80,18 +80,18 @@
   .phone-icon::before {
     content: '';
     position: absolute;
-    left: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 24px;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 3px;
     border-radius: 1.5px;
     background: #ffaa00;
   }
   @keyframes rotateDevice {
     0% { transform: rotate(0deg); }
-    30% { transform: rotate(90deg); }
-    70% { transform: rotate(90deg); }
+    30% { transform: rotate(-90deg); }
+    70% { transform: rotate(-90deg); }
     100% { transform: rotate(0deg); }
   }
   .prompt-title {
@@ -110,26 +110,12 @@
     text-transform: uppercase;
   }
 
-  @media (orientation: landscape) and (pointer: coarse) {
+  @media (orientation: portrait) and (pointer: coarse) {
     #rotate-prompt {
       display: flex;
     }
     #game-wrap {
       display: none !important;
-    }
-  }
-  @media (min-width: 1025px) {
-    /* Beautiful phone frame mockup when viewed on desktop browsers */
-    #game-wrap {
-      width: 506px;
-      height: 900px;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      border: 6px solid #ffaa00;
-      border-radius: 20px;
-      box-sizing: border-box;
-      box-shadow: 0 0 50px rgba(255, 170, 0, 0.45);
     }
   }
 </style>
@@ -138,7 +124,7 @@
 <div id="rotate-prompt">
   <div class="phone-icon"></div>
   <h1 class="prompt-title">Stickfighters</h1>
-  <p class="prompt-subtitle">Please rotate your device to portrait</p>
+  <p class="prompt-subtitle">Please rotate your device to landscape</p>
 </div>
 <div id="game-wrap"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
@@ -154,25 +140,8 @@ document.addEventListener('touchmove', function(e) {
 function resizeGame() {
   const gameWrap = document.getElementById('game-wrap');
   if (gameWrap) {
-    if (window.innerWidth <= 1024) {
-      gameWrap.style.width = window.innerWidth + 'px';
-      gameWrap.style.height = window.innerHeight + 'px';
-      gameWrap.style.left = '0';
-      gameWrap.style.top = '0';
-      gameWrap.style.transform = 'none';
-      gameWrap.style.border = 'none';
-      gameWrap.style.borderRadius = '0';
-      gameWrap.style.boxShadow = 'none';
-    } else {
-      gameWrap.style.width = '';
-      gameWrap.style.height = '';
-      gameWrap.style.left = '';
-      gameWrap.style.top = '';
-      gameWrap.style.transform = '';
-      gameWrap.style.border = '';
-      gameWrap.style.borderRadius = '';
-      gameWrap.style.boxShadow = '';
-    }
+    gameWrap.style.width = window.innerWidth + 'px';
+    gameWrap.style.height = window.innerHeight + 'px';
   }
 }
 window.addEventListener('resize', resizeGame);
@@ -180,11 +149,11 @@ window.addEventListener('orientationchange', resizeGame);
 window.addEventListener('DOMContentLoaded', resizeGame);
 
 /* =========================================================
-   STICKFIGHTERS — HANDCRAFTED PORTRAIT EDITION
+   STICKFIGHTERS — HANDCRAFTED LANDSCAPE EDITION
    ========================================================= */
 
-const W = 540, H = 960;
-const GROUND_Y = 620; // 2/3 screen for combat, bottom 1/3 for controls
+const W = 960, H = 540;
+const GROUND_Y = 450; // Standard landscape arena height
 
 const PALETTE = {
   skyTop: 0x1b0e3d,
@@ -500,7 +469,6 @@ class Fighter {
     const facing = this.facing;
     const HIP_H=60, SH_H=100, HEAD_R=16, LEN1=28, LEN2=28;
     
-    // Position exactly for portrait screen Y bounds
     g.setPosition(this.x, this.y - 53);
     vfx.setPosition(this.x, this.y - 53);
 
@@ -701,15 +669,17 @@ function drawArena(scene){
   g.fillStyle(0xffffff, 1);
   g.fillCircle(sunX, sunY, 70);
 
-  // Mountains styled for vertical aspect ratio
+  // Mountains laid out across landscape screen
   g.fillStyle(0x381232, 0.7);
-  g.fillTriangle(-60, GROUND_Y, 150, GROUND_Y-190, 360, GROUND_Y);
-  g.fillTriangle(180, GROUND_Y, 390, GROUND_Y-210, 600, GROUND_Y);
+  g.fillTriangle(-60, GROUND_Y, 200, GROUND_Y-190, 460, GROUND_Y);
+  g.fillTriangle(300, GROUND_Y, 560, GROUND_Y-220, 820, GROUND_Y);
+  g.fillTriangle(600, GROUND_Y, 820, GROUND_Y-170, 1040, GROUND_Y);
 
   g.fillStyle(0x210b1f, 0.95);
-  g.fillTriangle(-100, GROUND_Y, 80, GROUND_Y-130, 260, GROUND_Y);
-  g.fillTriangle(140, GROUND_Y, 320, GROUND_Y-150, 500, GROUND_Y);
-  g.fillTriangle(380, GROUND_Y, 480, GROUND_Y-110, 620, GROUND_Y);
+  g.fillTriangle(-100, GROUND_Y, 120, GROUND_Y-130, 340, GROUND_Y);
+  g.fillTriangle(200, GROUND_Y, 440, GROUND_Y-150, 680, GROUND_Y);
+  g.fillTriangle(540, GROUND_Y, 720, GROUND_Y-160, 900, GROUND_Y);
+  g.fillTriangle(750, GROUND_Y, 890, GROUND_Y-120, 1060, GROUND_Y);
 
   const pagoda = (px) => {
     g.fillStyle(0x060309, 1);
@@ -749,13 +719,13 @@ function drawArena(scene){
     g.fillRect(px - 1.5, curY - 18, 3, 18);
   };
   
-  pagoda(100);
-  pagoda(W - 100);
+  pagoda(160);
+  pagoda(W - 160);
 
   g.fillStyle(0x060309, 1);
   g.fillRect(0, GROUND_Y, W, 20); 
   
-  const numPosts = 6;
+  const numPosts = 10;
   const spacing = W / (numPosts - 1);
   g.lineStyle(6, 0x060309, 1);
   for(let i=0; i<numPosts; i++) {
@@ -767,7 +737,7 @@ function drawArena(scene){
     g.fillCircle(px, GROUND_Y - 5, 6); 
   }
 
-  // Base bottom floor background plate (filled down to bottom of vertical screen)
+  // Under-ground base plate
   g.fillStyle(0x0c0715, 1); 
   g.fillRect(0, GROUND_Y + 20, W, H - (GROUND_Y + 20));
   
@@ -794,8 +764,8 @@ class FightScene extends Phaser.Scene {
     else if (GameState.stage === 4) cpuWeapon = 'nunchucks';
     else if (GameState.stage >= 5) cpuWeapon = 'shadow_blade';
 
-    this.p1 = new Fighter(this, 150, PALETTE.p1Color, PALETTE.p1Stroke, 1, 'P1', {}, GameState.equippedWeapon);
-    this.p2 = new Fighter(this, 390, PALETTE.p2Color, PALETTE.p2Stroke, -1, 'P2', stageMods, cpuWeapon);
+    this.p1 = new Fighter(this, 200, PALETTE.p1Color, PALETTE.p1Stroke, 1, 'P1', {}, GameState.equippedWeapon);
+    this.p2 = new Fighter(this, 760, PALETTE.p2Color, PALETTE.p2Stroke, -1, 'P2', stageMods, cpuWeapon);
 
     this.keys = this.input.keyboard.addKeys({
       a:'A', d:'D', w:'W', s:'S', f:'F', g:'G', h:'H',
@@ -809,12 +779,13 @@ class FightScene extends Phaser.Scene {
     this.comboTexts = [];
     this.mobileKeys = { left:false, right:false, up:false, down:false, punch:false, kick:false, special:false };
 
-    // Handcrafted mobile touch gesture controller (Split Screen: Left = Move/Jump, Right = Combat Gestures)
+    // Handcrafted mobile touch gesture controller (Split screen)
     this.leftTouchActive = false;
     this.rightTouchActive = false;
 
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.y < 90) return; // Ignore HUD top area taps
+      if (GameState.controlType !== 'gestures') return;
+      if (pointer.y < 90) return; // Ignore HUD area clicks
       
       if (pointer.x < W / 2) {
         this.leftTouchActive = true;
@@ -829,6 +800,8 @@ class FightScene extends Phaser.Scene {
     });
 
     this.input.on('pointermove', (pointer) => {
+      if (GameState.controlType !== 'gestures') return;
+      
       if (this.leftTouchActive) {
         const dx = pointer.x - this.leftStartX;
         const dy = pointer.y - this.leftStartY;
@@ -854,7 +827,7 @@ class FightScene extends Phaser.Scene {
         const dy = pointer.y - this.rightStartY;
         
         if (dy > 30) {
-          this.mobileKeys.down = true; // Block (Hold to sustain)
+          this.mobileKeys.down = true; // Block (Hold)
         } else if (dy < -30) {
           this.mobileKeys.kick = true;
         } else if (dx > 30) {
@@ -864,6 +837,8 @@ class FightScene extends Phaser.Scene {
     });
 
     this.input.on('pointerup', (pointer) => {
+      if (GameState.controlType !== 'gestures') return;
+      
       if (this.leftTouchActive) {
         this.leftTouchActive = false;
         this.mobileKeys.left = false;
@@ -877,12 +852,12 @@ class FightScene extends Phaser.Scene {
         const dy = pointer.y - this.rightStartY;
         const duration = this.time.now - this.rightTouchTime;
         
-        // Tap triggers Light Attack (Punch)
+        // Tap detector (Punch)
         if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && duration < 250) {
           this.mobileKeys.punch = true;
         }
         
-        // Reset one-shot swipe inputs
+        // Reset one-shot states
         this.mobileKeys.down = false;
         this.mobileKeys.kick = false;
         this.mobileKeys.special = false;
@@ -915,7 +890,7 @@ class FightScene extends Phaser.Scene {
   }
 
   buildHUD(){
-    const barW=160, barH=20;
+    const barW=320, barH=20;
     const hudY = 46;
 
     this.hudG = this.add.graphics().setDepth(15);
@@ -936,7 +911,7 @@ class FightScene extends Phaser.Scene {
     this.hudG.fillStyle(PALETTE.p2Color, 1);
     this.hudG.fillCircle(W-35, hudY, 11);
 
-    // Health & Special bars adapted for portrait W=540
+    // Health & Special bars adapted for landscape W=960
     this.p1BarBg=this.add.rectangle(65+barW/2, hudY-8, barW, barH, 0x1f1730).setOrigin(0.5).setDepth(10).setStrokeStyle(2, 0xffbb00);
     this.p1Bar=this.add.rectangle(65, hudY-8, barW, barH, 0xffc400).setOrigin(0, 0.5).setDepth(11); 
 
@@ -958,7 +933,7 @@ class FightScene extends Phaser.Scene {
     this.p2Name = this.add.text(W-65, hudY-26, p2name, {fontFamily:'Bebas Neue', fontSize:'14px', color:'#ffffff'}).setOrigin(1,0).setDepth(11);
     this.p2HealthPct = this.add.text(W-65 - barW, hudY-26, '100%', {fontFamily:'Oswald', fontSize:'11px', color:'#ffcc00'}).setDepth(11);
 
-    // Timer Hexagon centered
+    // Timer Hexagon centered at W/2 = 480
     this.hudG.fillStyle(0x0c0715, 0.95);
     this.hudG.lineStyle(2.5, 0xff9900, 1);
     const hexPoints = [
@@ -1001,7 +976,7 @@ class FightScene extends Phaser.Scene {
       this.gesturesContainer.setVisible(GameState.controlType === 'gestures');
     });
 
-    // Fullscreen toggle
+    // Fullscreen toggle (Fill Screen option, hides top address bars on mobile)
     const fsBtn = this.add.text(W/2 + 68, 45, '⛶', {
       fontFamily: 'Oswald', fontSize: '24px', color: '#ffaa00'
     }).setOrigin(0.5).setDepth(20).setInteractive({ useHandCursor: true });
@@ -1030,33 +1005,18 @@ class FightScene extends Phaser.Scene {
   }
 
   buildMobileControls(){
-    // Setup containers to toggle control systems dynamically
+    // Setup containers to toggle controls layout dynamically
     this.buttonsContainer = this.add.container(0, 0).setDepth(99);
     this.gesturesContainer = this.add.container(0, 0).setDepth(99);
 
-    // --- A. GESTURE CONTROLS LAYOUT ---
-    const divideLine = this.add.graphics();
-    divideLine.lineStyle(1.5, 0xffffff, 0.08);
-    divideLine.lineBetween(W/2, GROUND_Y + 25, W/2, H - 35);
-    this.gesturesContainer.add(divideLine);
+    // --- A. GESTURES OVERLAY ---
+    const textStyle = { fontFamily: 'Oswald', fontSize: '13px', color: '#ffbb00', lineSpacing: 4 };
+    const gstHint = this.add.text(W/2, H - 35, 'LEFT SCREEN: DRAG TO WALK/JUMP   |   RIGHT SCREEN: TAP ➔ PUNCH  •  SWIPE ▲ ➔ KICK  •  SWIPE ▼ ➔ BLOCK  •  SWIPE ▶ ➔ SPECIAL', textStyle)
+      .setOrigin(0.5).setDepth(100).setStroke('#000000', 4);
+    this.gesturesContainer.add(gstHint);
 
-    const leftX = W / 4;
-    const titleStyle = { fontFamily: 'Bebas Neue', fontSize: '18px', color: '#ffaa00' };
-    const labelStyle = { fontFamily: 'Oswald', fontSize: '13px', color: '#ffffff', lineSpacing: 5 };
-
-    const movTitle = this.add.text(leftX, GROUND_Y + 35, 'MOVEMENT ZONE', titleStyle).setOrigin(0.5);
-    const movDesc = this.add.text(leftX, GROUND_Y + 95, 'DRAG LEFT / RIGHT ➔ WALK\nDRAG UP ➔ JUMP', labelStyle).setOrigin(0.5).setAlign('center');
-    this.gesturesContainer.add([movTitle, movDesc]);
-
-    const rightX = (W / 4) * 3;
-    const combTitle = this.add.text(rightX, GROUND_Y + 35, 'COMBAT ZONE', titleStyle).setOrigin(0.5);
-    const attackText = 'TAP SCREEN ➔ PUNCH\nSWIPE UP ➔ KICK\nSWIPE DOWN ➔ BLOCK (HOLD)\nSWIPE RIGHT ➔ SPECIAL ATTACK';
-    const combDesc = this.add.text(rightX, GROUND_Y + 105, attackText, labelStyle).setOrigin(0.5).setAlign('center');
-    this.gesturesContainer.add([combTitle, combDesc]);
-
-
-    // --- B. ANALOGUE BUTTONS LAYOUT ---
-    const dpadX = 125, dpadY = H - 165;
+    // --- B. ANALOGUE VIRTUAL BUTTONS ---
+    const dpadX = 135, dpadY = H - 120;
     const dpadBg = this.add.circle(dpadX, dpadY, 68, 0x0c0715, 0.65).setStrokeStyle(3, 0xffbb00, 0.6);
     this.buttonsContainer.add(dpadBg);
 
@@ -1076,7 +1036,7 @@ class FightScene extends Phaser.Scene {
     makeDirBtn(dpadX, dpadY - 38, '▲', 'up');
     makeDirBtn(dpadX, dpadY + 38, '▼', 'down');
 
-    const actX = W - 135, actY = H - 165;
+    const actX = W - 165, actY = H - 120;
     const ig = this.add.graphics().setDepth(102);
     this.buttonsContainer.add(ig);
 
@@ -1151,12 +1111,12 @@ class FightScene extends Phaser.Scene {
       g.fillCircle(x + 3, y - 7, 5);
     });
 
-    // Toggle active interface view
+    // Initialize visibility states
     this.buttonsContainer.setVisible(GameState.controlType === 'buttons');
     this.gesturesContainer.setVisible(GameState.controlType === 'gestures');
 
     const hintStyle = { fontFamily: 'Oswald', fontSize: '11px', color: '#777777' };
-    this.add.text(W/2, H - 20, 'Desktop Controls: A/D Move | W Jump | S Block | F/G/H Attacks', hintStyle).setOrigin(0.5).setDepth(11);
+    this.add.text(W/2, H - 15, 'Desktop Controls: A/D Move | W Jump | S Block | F/G/H Attacks', hintStyle).setOrigin(0.5).setDepth(11);
   }
 
   onHitLanded(attacker, defender, dmg, chainCount, combo){
@@ -1262,7 +1222,7 @@ class FightScene extends Phaser.Scene {
     this.mobileKeys.kick = false;
     this.mobileKeys.special = false;
 
-    const barW=160;
+    const barW=320;
     const p1HPPercent = this.p1.health / this.p1.maxHealth;
     const p2HPPercent = this.p2.health / this.p2.maxHealth;
 
@@ -1386,7 +1346,7 @@ class MenuScene extends Phaser.Scene {
     // Dark layout overlay (depth 1)
     this.add.rectangle(0,0,W,H,0x000000, 0.45).setOrigin(0).setDepth(1);
     
-    // Dynamic single menu flow: main view, play select subview, shop subview
+    // Dynamic single menu flow
     this.currentView = 'main'; // 'main', 'play_select', 'shop'
     this.viewContainers = {
       main: this.add.container(0, 0).setDepth(10),
@@ -1394,7 +1354,7 @@ class MenuScene extends Phaser.Scene {
       shop: this.add.container(0, 0).setDepth(10).setVisible(false)
     };
 
-    // Instantiate showcase character model in the center (depth 2, above backdrop)
+    // Instantiate showcase character model in the center (depth 2)
     this.showcaseFighter = new Fighter(this, W/2, GROUND_Y, PALETTE.p1Color, PALETTE.p1Stroke, 1, 'SHOWCASE', GameState.equippedWeapon);
     this.showcaseFighter.g.setScale(1.25);
     this.showcaseFighter.shadowG.setScale(1.25);
@@ -1406,6 +1366,21 @@ class MenuScene extends Phaser.Scene {
     this.buildMainView();
     this.buildPlaySelectView();
     this.buildShopView();
+
+    // Fullscreen toggle button on top right of the menu scene (Fill screen option)
+    const fsBtn = this.add.text(W - 35, 30, '⛶', { fontFamily: 'Oswald', fontSize: '26px', color: '#ffaa00' })
+      .setOrigin(0.5)
+      .setDepth(20)
+      .setInteractive({ useHandCursor: true });
+    fsBtn.on('pointerover', () => fsBtn.setColor('#ffffff'));
+    fsBtn.on('pointerout', () => fsBtn.setColor('#ffaa00'));
+    fsBtn.on('pointerdown', () => {
+      if (this.scale.isFullscreen) {
+        this.scale.stopFullscreen();
+      } else {
+        this.scale.startFullscreen();
+      }
+    });
   }
 
   update(time, delta) {
@@ -1433,29 +1408,29 @@ class MenuScene extends Phaser.Scene {
     this.showcaseFighter.shadowG.setVisible(target !== 'shop');
   }
 
-  // --- 1. MAIN SCREEN VIEW (PORTRAIT) ---
+  // --- 1. MAIN SCREEN VIEW (LANDSCAPE) ---
   buildMainView() {
     const c = this.viewContainers.main;
 
-    const titleText = this.add.text(W/2, 130, 'Stickfighters', {
-      fontFamily: 'Satisfy', fontSize: '64px', color: '#ffffff'
+    const titleText = this.add.text(W/2, 90, 'Stickfighters', {
+      fontFamily: 'Satisfy', fontSize: '72px', color: '#ffffff'
     }).setOrigin(0.5).setStroke('#000000', 8).setShadow(2, 2, '#ffaa00', 4, true, true);
     c.add(titleText);
 
-    const streakLabel = this.add.text(W/2, 205, `WIN STREAK: ${GameState.streak}   (BEST: ${GameState.bestStreak})`, {
+    const streakLabel = this.add.text(W/2, 160, `WIN STREAK: ${GameState.streak}   (BEST: ${GameState.bestStreak})`, {
       fontFamily: 'Oswald', fontSize: '18px', color: '#ffbb00', fontWeight: 'bold'
     }).setOrigin(0.5).setStroke('#000', 3);
     c.add(streakLabel);
 
-    // Simple stacked option buttons below the center character
-    const playBtn = this.makeButton(W/2, H - 245, 'PLAY OPTION', () => {
+    // Symmetrical horizontal row of options below the fighter
+    const playBtn = this.makeButton(W/2 - 200, H - 110, 'PLAY OPTION', () => {
       this.switchView('play_select');
     });
-    const armoryBtn = this.makeButton(W/2, H - 185, 'ARMORY OPTION', () => {
+    const armoryBtn = this.makeButton(W/2, H - 110, 'ARMORY OPTION', () => {
       this.switchView('shop');
     });
 
-    const controlBtn = this.makeButton(W/2, H - 125, GameState.controlType === 'buttons' ? 'CONTROL: ANALOGUE 🎮' : 'CONTROL: GESTURES 🖐', () => {
+    const controlBtn = this.makeButton(W/2 + 200, H - 110, GameState.controlType === 'buttons' ? 'CONTROL: ANALOGUE 🎮' : 'CONTROL: GESTURES 🖐', () => {
       GameState.controlType = GameState.controlType === 'buttons' ? 'gestures' : 'buttons';
       controlBtn.list[1].setText(GameState.controlType === 'buttons' ? 'CONTROL: ANALOGUE 🎮' : 'CONTROL: GESTURES 🖐');
     });
@@ -1468,20 +1443,20 @@ class MenuScene extends Phaser.Scene {
   buildPlaySelectView() {
     const c = this.viewContainers.play_select;
 
-    const titleText = this.add.text(W/2, 130, 'Select Game Mode', {
+    const titleText = this.add.text(W/2, 100, 'Select Game Mode', {
       fontFamily: 'Bebas Neue', fontSize: '38px', color: '#ffffff'
     }).setOrigin(0.5).setStroke('#000000', 6);
     c.add(titleText);
 
-    const arcadeBtn = this.makeButton(W/2, H - 240, `ARCADE (STAGE ${GameState.stage})`, () => {
+    const arcadeBtn = this.makeButton(W/2 - 200, H - 110, `ARCADE (STAGE ${GameState.stage})`, () => {
       if (this.showcaseFighter) this.showcaseFighter.destroy();
       this.scene.start('fight', {vsCPU:true, arcade:true});
     });
-    const practiceBtn = this.makeButton(W/2, H - 175, 'PRACTICE ARENA', () => {
+    const practiceBtn = this.makeButton(W/2, H - 110, 'PRACTICE ARENA', () => {
       if (this.showcaseFighter) this.showcaseFighter.destroy();
       this.scene.start('fight', {vsCPU:true, arcade:false});
     });
-    const backBtn = this.makeButton(W/2, H - 110, 'BACK', () => {
+    const backBtn = this.makeButton(W/2 + 200, H - 110, 'BACK', () => {
       this.switchView('main');
     });
     backBtn.setScale(0.85);
@@ -1489,19 +1464,19 @@ class MenuScene extends Phaser.Scene {
     c.add([arcadeBtn, practiceBtn, backBtn]);
   }
 
-  // --- 3. ARMORY SHOP VIEW (VERTICAL PORTRAIT SCROLL LIST) ---
+  // --- 3. ARMORY SHOP VIEW (HORIZONTAL LANDSCAPE GRID) ---
   buildShopView() {
     const c = this.viewContainers.shop;
 
-    const titleText = this.add.text(W/2, 50, 'ARMORY WEAPONS', {
+    const titleText = this.add.text(W/2, 45, 'ARMORY WEAPONS', {
       fontFamily: 'Bebas Neue', fontSize: '32px', color: '#ffaa00'
     }).setOrigin(0.5).setStroke('#000000', 5);
     
-    const coinsText = this.add.text(W/2, 85, `YOUR COINS: ${GameState.coins} C`, {
+    const coinsText = this.add.text(W/2, 80, `YOUR COINS: ${GameState.coins} C`, {
       fontFamily: 'Oswald', fontSize: '15px', color: '#ffffff'
     }).setOrigin(0.5);
 
-    const backBtn = this.makeButton(80, 50, 'BACK', () => {
+    const backBtn = this.makeButton(80, 45, 'BACK', () => {
       this.switchView('main');
     });
     backBtn.setScale(0.75);
@@ -1517,27 +1492,35 @@ class MenuScene extends Phaser.Scene {
     this.shopCards = [];
 
     const keys = Object.keys(WEAPONS);
-    const startY = 175;
-    const stepY = 145; // Vertical stack spacing for portrait screen
-    const x = W/2;
+    
+    // Symmetrical coordinates grid (3 on top row, 2 on bottom row)
+    const cardW = 280, cardH = 135;
+    const gridPositions = [
+      { x: W/2 - 305, y: 195 },
+      { x: W/2,       y: 195 },
+      { x: W/2 + 305, y: 195 },
+      { x: W/2 - 152, y: 350 },
+      { x: W/2 + 152, y: 350 }
+    ];
 
     keys.forEach((key, index) => {
       const wep = WEAPONS[key];
-      const y = startY + index * stepY;
+      const pos = gridPositions[index];
+      const x = pos.x;
+      const y = pos.y;
 
-      // Card backplate adapted to 460px width for portrait layout
-      const plate = this.add.rectangle(x, y, 460, 125, 0x1f1730, 0.85).setOrigin(0.5).setStrokeStyle(2, 0xffffff, 0.15);
+      const plate = this.add.rectangle(x, y, cardW, cardH, 0x1f1730, 0.85).setOrigin(0.5).setStrokeStyle(2, 0xffffff, 0.15);
       
-      const title = this.add.text(x - 210, y - 48, wep.name.toUpperCase(), {
-        fontFamily: 'Bebas Neue', fontSize: '20px', color: '#ffffff'
+      const title = this.add.text(x - 125, y - 52, wep.name.toUpperCase(), {
+        fontFamily: 'Bebas Neue', fontSize: '18px', color: '#ffffff'
       });
 
-      const desc = this.add.text(x - 210, y - 18, wep.desc, {
-        fontFamily: 'Oswald', fontSize: '12px', color: '#aaaaaa', wordWrap: { width: 260 }
+      const desc = this.add.text(x - 125, y - 24, wep.desc, {
+        fontFamily: 'Oswald', fontSize: '11px', color: '#aaaaaa', wordWrap: { width: 250 }
       });
 
-      const stats = this.add.text(x - 210, y + 25, `DAMAGE: +${Math.round((wep.dmg-1)*100)}%   |   REACH: ${wep.range}px`, {
-        fontFamily: 'Oswald', fontSize: '12px', color: '#ff9633'
+      const stats = this.add.text(x - 125, y + 16, `DAMAGE: +${Math.round((wep.dmg-1)*100)}%   •   REACH: ${wep.range}px`, {
+        fontFamily: 'Oswald', fontSize: '11px', color: '#ff9633'
       });
 
       container.add([plate, title, desc, stats]);
@@ -1547,14 +1530,14 @@ class MenuScene extends Phaser.Scene {
       const isEquipped = GameState.equippedWeapon === wep.id;
 
       if (isEquipped) {
-        const eqLabel = this.add.text(x + 130, y, 'EQUIPPED', {
-          fontFamily: 'Bebas Neue', fontSize: '16px', color: '#00ff66'
+        const eqLabel = this.add.text(x, y + 48, 'EQUIPPED', {
+          fontFamily: 'Bebas Neue', fontSize: '15px', color: '#00ff66'
         }).setOrigin(0.5);
         container.add(eqLabel);
         this.shopCards.push(eqLabel);
       } else if (isOwned) {
-        const btn = this.add.rectangle(x + 130, y, 120, 36, 0x0084ff, 0.95).setOrigin(0.5).setInteractive({useHandCursor:true}).setStrokeStyle(1.5, 0xffffff);
-        const txt = this.add.text(x + 130, y, 'EQUIP', {fontFamily: 'Bebas Neue', fontSize: '15px', color: '#ffffff'}).setOrigin(0.5);
+        const btn = this.add.rectangle(x, y + 48, 240, 26, 0x0084ff, 0.95).setOrigin(0.5).setInteractive({useHandCursor:true}).setStrokeStyle(1.5, 0xffffff);
+        const txt = this.add.text(x, y + 48, 'EQUIP', {fontFamily: 'Bebas Neue', fontSize: '14px', color: '#ffffff'}).setOrigin(0.5);
         
         btn.on('pointerover', () => btn.setFillStyle(0x0099ff, 1));
         btn.on('pointerout', () => btn.setFillStyle(0x0084ff, 0.95));
@@ -1574,8 +1557,8 @@ class MenuScene extends Phaser.Scene {
       } else {
         const canBuy = GameState.coins >= wep.cost;
         const btnColor = canBuy ? 0xffaa00 : 0x444444;
-        const btn = this.add.rectangle(x + 130, y, 120, 36, btnColor, 0.95).setOrigin(0.5).setStrokeStyle(1.5, canBuy?0xffffff:0x666666);
-        const txt = this.add.text(x + 130, y, `${wep.cost} C`, {fontFamily: 'Bebas Neue', fontSize: '15px', color: '#ffffff'}).setOrigin(0.5);
+        const btn = this.add.rectangle(x, y + 48, 240, 26, btnColor, 0.95).setOrigin(0.5).setStrokeStyle(1.5, canBuy?0xffffff:0x666666);
+        const txt = this.add.text(x, y + 48, `${wep.cost} C`, {fontFamily: 'Bebas Neue', fontSize: '14px', color: '#ffffff'}).setOrigin(0.5);
         
         if (canBuy) {
           btn.setInteractive({useHandCursor:true});
@@ -1598,10 +1581,10 @@ class MenuScene extends Phaser.Scene {
   }
 
   makeButton(x, y, label, cb){
-    const w = 260, h = 48;
+    const w = 220, h = 44;
     const btnContainer = this.add.container(x, y).setDepth(15);
     const bg = this.add.rectangle(0, 0, w, h, 0x0c0715, 0.9).setStrokeStyle(2.5, 0xffaa00, 1.0).setOrigin(0.5).setInteractive({useHandCursor:true});
-    const txt = this.add.text(0, 0, label, {fontFamily: 'Bebas Neue', fontSize: '20px', color: '#ffffff'}).setOrigin(0.5).setStroke('#000000', 4);
+    const txt = this.add.text(0, 0, label, {fontFamily: 'Bebas Neue', fontSize: '18px', color: '#ffffff'}).setOrigin(0.5).setStroke('#000000', 4);
     
     bg.on('pointerover', () => bg.setStrokeStyle(3, 0xffffff, 1.0));
     bg.on('pointerout', () => bg.setStrokeStyle(2.5, 0xffaa00, 1.0));
@@ -1617,7 +1600,7 @@ const config = {
   width: W, height: H,
   parent: 'game-wrap',
   backgroundColor: '#0c0715',
-  scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH, orientation: Phaser.Scale.PORTRAIT },
+  scale: { mode: Phaser.Scale.ENVELOP, autoCenter: Phaser.Scale.CENTER_BOTH, orientation: Phaser.Scale.LANDSCAPE },
   scene: [MenuScene, FightScene]
 };
 
